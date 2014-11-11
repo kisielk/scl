@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -16,6 +17,7 @@ type Scale struct {
 }
 
 type Pitch interface {
+	Freq(base float64) float64
 	String() string
 }
 
@@ -27,10 +29,18 @@ func (p RatioPitch) String() string {
 	return fmt.Sprintf("%d/%d", p.N, p.D)
 }
 
+func (p RatioPitch) Freq(f float64) float64 {
+	return float64(p.N) * f / float64(p.D)
+}
+
 type CentsPitch float64
 
 func (p CentsPitch) String() string {
 	return fmt.Sprintf("%f", p)
+}
+
+func (p CentsPitch) Freq(f float64) float64 {
+	return f * math.Exp2(float64(p)/1200.0)
 }
 
 func Read(r io.Reader) (Scale, error) {
