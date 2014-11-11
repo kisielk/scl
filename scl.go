@@ -80,6 +80,30 @@ func Read(r io.Reader) (Scale, error) {
 	return scale, s.Err()
 }
 
+func Write(w io.Writer, s Scale, name string) error {
+	if name != "" {
+		_, err := fmt.Fprintf(w, "! %s\n!\n", name)
+		if err != nil {
+			return err
+		}
+	}
+	_, err := fmt.Fprintln(w, s.Description)
+	if err != nil {
+		return err
+	}
+	_, err = fmt.Fprintf(w, " %d\n", len(s.Pitches))
+	if err != nil {
+		return err
+	}
+	for _, p := range s.Pitches {
+		_, err := fmt.Fprintf(w, " %s\n", p)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func parsePitch(s string) (Pitch, error) {
 	s = strings.Fields(s)[0]
 	if strings.ContainsRune(s, '.') {
