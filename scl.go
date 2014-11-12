@@ -11,16 +11,32 @@ import (
 	"strings"
 )
 
+// A Scale is a sequence of pitches that can be applied relative to a base frequency.
 type Scale struct {
 	Description string
 	Pitches     []Pitch
 }
 
+// Freqs returns one octave of frequencies in the scale, starting at and including
+// the given base frequency.
+func (s Scale) Freqs(base float64) []float64 {
+	f := make([]float64, len(s.Pitches)+1)
+	f[0] = base
+	for i, p := range s.Pitches {
+		f[i+1] = p.Freq(base)
+	}
+	return f
+}
+
+// Pitch represents one scale pitch.
 type Pitch interface {
+	// Freq returns the pitch frequency relative to the given base.
 	Freq(base float64) float64
+
 	String() string
 }
 
+// A RatioPitch is a pitch which is the ratio of two integers.
 type RatioPitch struct {
 	N, D int64
 }
@@ -33,6 +49,7 @@ func (p RatioPitch) Freq(f float64) float64 {
 	return float64(p.N) * f / float64(p.D)
 }
 
+// A CentsPitch represents a pitch given in units of cents.
 type CentsPitch float64
 
 func (p CentsPitch) String() string {
@@ -43,6 +60,8 @@ func (p CentsPitch) Freq(f float64) float64 {
 	return f * math.Exp2(float64(p)/1200.0)
 }
 
+// Read reads a Scale from the given reader.
+// The input is assumed to be a file in scl format and is consumed until EOF is reached.
 func Read(r io.Reader) (Scale, error) {
 	var (
 		scale      Scale
@@ -80,6 +99,9 @@ func Read(r io.Reader) (Scale, error) {
 	return scale, s.Err()
 }
 
+// Write writes a scale to the given writer in scl format.
+// If name is a non-empty string it is written in a comment at the beginning of the output,
+// as is customary in .scl files.
 func Write(w io.Writer, s Scale, name string) error {
 	if name != "" {
 		_, err := fmt.Fprintf(w, "! %s\n!\n", name)

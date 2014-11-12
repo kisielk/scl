@@ -3,6 +3,7 @@ package scl
 import (
 	"bytes"
 	"flag"
+	"math"
 	"os"
 	"path/filepath"
 	"testing"
@@ -38,14 +39,35 @@ const exampleMeanquar = `! meanquar.scl
  2/1
 `
 
-func TestReadMeanquar(t *testing.T) {
+func TestMeanquar(t *testing.T) {
 	f := bytes.NewBufferString(exampleMeanquar)
 	s, err := Read(f)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if want := "1/4-comma meantone scale. Pietro Aaron's temperament (1523)"; s.Description != want {
-		t.Fatalf("Bad decsription, got %q want %q", s.Description, want)
+		t.Errorf("Bad decsription, got %q want %q", s.Description, want)
+	}
+	freqs := s.Freqs(440.0)
+	expected := []float64{
+		440,
+		459.7589598668908,
+		491.9349559216158,
+		526.3627695908722,
+		550,
+		588.4914678578758,
+		614.9186935292653,
+		657.9534643202527,
+		687.5,
+		735.6143374292225,
+		787.0959266852666,
+		822.4418285642832,
+		880,
+	}
+	for i := range freqs {
+		if got, want := freqs[i], expected[i]; math.Abs(got-want) > 0.0001 {
+			t.Errorf("scale degree %d: got %f want %f", i, got, want)
+		}
 	}
 }
 
